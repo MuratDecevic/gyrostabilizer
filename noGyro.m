@@ -1,5 +1,4 @@
 % Roll motion of a boat without gyrostabilizer
-% Townsend and Shenoi
 
 %% boat
 length = 4; % m
