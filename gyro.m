@@ -16,7 +16,7 @@ thickness = 0.03; % axial thickness of flywheel [m]
 spinRate = 6000; % angle ksi [r/min]
 ws = (spinRate*2*pi)/60; % rad/s
 %Is= 0.5*(mg+mm)*rg^2; %kgm^2 solid disk
-Is = 0.8*mg*ro^2; %kgm^2 rim-weighted rotor
+Is = 0.5*0.8*mg*(ro^2+ri^2); %kgm^2 rim-weighted rotor
 Im = 0.1; % transversal moment of inertia of a motor, approximated as a sylinder radius=0.075m
 Itr = (mg/12)*(3*(ro^2+ri^2)+thickness^2); %kgm^2
 It = Itr+Im; % transversal moment of inertia of flywheel + motor
