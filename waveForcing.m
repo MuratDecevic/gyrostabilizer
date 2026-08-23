@@ -21,8 +21,26 @@ function Mwave = waveForcing(t)
 %     h  = 50 m
 %     gamma = 3.3
 %
-% 50 random wave components
+% 50 deterministic wave components
 % ============================================================
+
+% Increment this when the forcing algorithm changes. The simulation cache
+% uses the complete signature below to reject stale results.
+implementationVersion = 2;
+seed = 20260812;
+
+if ischar(t) || (isstring(t) && isscalar(t))
+    if strcmpi(t, 'signature')
+        Mwave = [implementationVersion, seed, 9.81, 2.0, 11.0, ...
+            50.0, 3.3, 50, 0.04, 0.30, 5000];
+        return;
+    end
+    error('waveForcing:UnknownCommand', 'Unknown command: %s', t);
+end
+
+persistent omega momentAmplitude phi
+
+if isempty(omega)
 
 %% ------------------------------------------------------------
 % Sea-state parameters
@@ -105,15 +123,8 @@ a = sqrt(2*S*df);
 
 % Fixed seed -> same wave realization every simulation
 
-persistent phi
-
-if isempty(phi)
-
-    rng(20260812);
-
-    phi = 2*pi*rand(1,N);
-
-end
+stream = RandStream('mt19937ar', 'Seed', seed);
+phi = 2*pi*rand(stream,1,N);
 
 %% ------------------------------------------------------------
 % Finite-depth wave numbers
@@ -152,6 +163,10 @@ for n = 1:N
 
 end
 
+momentAmplitude = Kw*a.*k;
+
+end
+
 %% ------------------------------------------------------------
 % Wave-induced roll moment
 %
@@ -165,14 +180,6 @@ end
 %
 % ------------------------------------------------------------
 
-Mwave = 0;
-
-for n = 1:N
-
-    Mwave = Mwave + ...
-        Kw*a(n)*k(n)* ...
-        cos(omega(n)*t + phi(n));
-
-end
+Mwave = sum(momentAmplitude.*cos(omega*t + phi));
 
 end

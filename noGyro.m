@@ -20,12 +20,10 @@ tspan=[0 100];
 x0 = [0;0];
 %% solve
 p=[Isys,B44,C44];
-[t,x] = ode45(@dynamics, tspan, x0,[], p);
+[t,x] = ode45(@noGyrodynamics, tspan, x0,[], p);
 
 theta=rad2deg(x(:,1));
 thetap=x(:,2);
-beta=rad2deg(x(:,3));
-betap=x(:,4);
 %% plot
 plot(t,theta,'-','LineWidth',1.5)
 xlabel('t')

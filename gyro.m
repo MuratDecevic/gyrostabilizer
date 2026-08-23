@@ -43,18 +43,39 @@ x0 = [0;0;0;0];
 
 filename = 'solutions.mat';
 
+% The cache is valid only when the equations, forcing, solver settings,
+% initial conditions, and every simulation parameter are unchanged.
+solverOptions = odeset('RelTol',1e-3,'AbsTol',1e-6);
+cacheMetadata = struct( ...
+    'modelVersion', 3, ...
+    'commonParameters', [Isys,B44,C44,Is,ws,It], ...
+    'bg', bg, ...
+    'cg', cg, ...
+    'tspan', tspan, ...
+    'x0', x0, ...
+    'solver', 'ode45', ...
+    'relativeTolerance', solverOptions.RelTol, ...
+    'absoluteTolerance', solverOptions.AbsTol, ...
+    'waveSignature', waveForcing('signature'));
+
 if isfile(filename)
-    load(filename, 'solutions');
-    fprintf('Loaded %d previously calculated solutions.\n', ...
-        numel(solutions));
+    cachedVariables = who('-file', filename);
+    hasRequiredVariables = all(ismember( ...
+        {'solutions','cacheMetadata'}, cachedVariables));
+    if hasRequiredVariables
+        cached = load(filename, 'solutions', 'cacheMetadata');
+    end
+    if hasRequiredVariables && ...
+            isequaln(cached.cacheMetadata, cacheMetadata)
+        solutions = cached.solutions;
+        fprintf('Loaded %d previously calculated solutions.\n', ...
+            numel(solutions));
+    else
+        solutions = emptySolutions();
+        fprintf('Cached solutions are stale. Recalculating.\n');
+    end
 else
-    solutions=struct( ...
-        'b', {}, ...
-        'c', {}, ...
-        't', {}, ...
-        'theta', {}, ...
-        'beta', {} ...
-        );
+    solutions = emptySolutions();
     fprintf('No previous solutions found. Starting from the beginning.\n');
 end
 
@@ -84,7 +105,7 @@ for i=1:size(b_c_combinations,1)
     
     % Solve
     p=[Isys,B44,C44,Is,ws,It,Bg,Cg];
-    [t,x] = ode45(@dynamics, tspan, x0,[], p);
+    [t,x] = ode45(@dynamics, tspan, x0,solverOptions, p);
     
     % Store the solution
     new_index=numel(solutions)+1;
@@ -95,10 +116,11 @@ for i=1:size(b_c_combinations,1)
     solutions(new_index).beta=rad2deg(x(:,3));
     
     % Save
-    save(filename,'solutions');
+    save(filename,'solutions','cacheMetadata');
     fprintf('Solution saved.\n');
     
 end
+
 % theta=rad2deg(x(:,1));
 % thetap=x(:,2);
 % beta=rad2deg(x(:,3));
@@ -116,4 +138,14 @@ for k=1:numel(solutions)
         'Bg=%g, Cg=%g',solutions(k).b, solutions(k).c));
     legend('roll','precession')
     grid on
+end
+
+function solutions = emptySolutions()
+solutions=struct( ...
+    'b', {}, ...
+    'c', {}, ...
+    't', {}, ...
+    'theta', {}, ...
+    'beta', {} ...
+    );
 end

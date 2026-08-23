@@ -13,9 +13,9 @@ bp=x(4); % precession rate, rad/s
 
 F40=waveForcing(t); % wave forcinf term
 % equations
-%It*beta''+Bg*beta'+Cg*sin(beta)=Is*ws*theta'*cos(beta)
+%It*beta''+Bg*beta'+Cg*sin(beta)=Is*ws*theta'*cos(beta)+(It/Is)*beta'
 %Isys*theta''+B44*theta'+C44*theta=F40-Is*ws*beta'*cos(beta)
-%proportional control, P*beta', P=1
+% The beta'/Is term is the precession control input.
 thpp=(F40/Isys)-(Is/Isys)*ws*bp*cos(b)-(B44/Isys)*thp-(C44/Isys)*th;
 bpp=(Is/It)*ws*thp*cos(b)-(Bg/It)*bp-(Cg/It)*sin(b)+bp/Is;
 
